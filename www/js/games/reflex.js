@@ -16,18 +16,29 @@ export const reflex = {
     };
   },
 
+  // hedef ve bombalar üst üste binmesin: mevcutlardan uzak bir yer ara
+  freeSpot(s, r) {
+    const g = s.G;
+    const others = [...g.targets.filter(t => !t.dead), ...g.bombs];
+    for (let tries = 0; tries < 30; tries++) {
+      const p = this.spawnPos(s, r);
+      if (others.every(o => Math.hypot(o.x - p.x, o.y - p.y) > o.r + r + 30)) return p;
+    }
+    return null; // boş yer yoksa hiç koyma (üst üste koymaktan iyidir)
+  },
+
   ensureTargets(s) {
     const g = s.G;
     const want = s.score >= 10 ? 2 : 1;
     while (g.targets.filter(t => !t.dead).length < want) {
       const r = Math.max(26, 44 - s.score * 0.5);
-      const p = this.spawnPos(s, r);
+      const p = this.freeSpot(s, r) || this.spawnPos(s, r);
       g.targets.push({ ...p, r, life: g.life, timeLeft: g.life, dead: false });
     }
-    // 5 puandan sonra ara sıra bomba
+    // 5 puandan sonra ara sıra bomba — ama hedefin üstüne asla değil
     if (s.score >= 5 && g.bombs.length < 1 && Math.random() < 0.5) {
-      const p = this.spawnPos(s, 34);
-      g.bombs.push({ ...p, r: 34, timeLeft: 1.6 + Math.random() });
+      const p = this.freeSpot(s, 34);
+      if (p) g.bombs.push({ ...p, r: 34, timeLeft: 1.6 + Math.random() });
     }
   },
 
