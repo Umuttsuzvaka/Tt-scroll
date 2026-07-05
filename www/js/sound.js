@@ -39,6 +39,13 @@ export const sound = {
     tone(120, 0.3, 0.26, 'sawtooth', 0.08);
   },
   record() { [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.12, i * 0.09, 'triangle', 0.13)); },
+  // piyano notası: MIDI numarasından frekansa (A4 = 69 = 440 Hz)
+  pianoNote(midi) {
+    const f = 440 * Math.pow(2, (midi - 69) / 12);
+    tone(f, 0.55, 0, 'triangle', 0.2);       // ana ton
+    tone(f * 2, 0.35, 0, 'sine', 0.07);      // oktav harmoniği (parlaklık)
+    tone(f / 2, 0.4, 0, 'sine', 0.05);       // bas desteği (sıcaklık)
+  },
 };
 
 export function vibrate(ms) {

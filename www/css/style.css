@@ -24,6 +24,10 @@ html, body {
 }
 .feed::-webkit-scrollbar { display: none; }
 
+/* Oyun oynanırken kaydırma kilitli — dokunuşlar yanlışlıkla akışı kaydırmasın */
+.feed.no-scroll { overflow-y: hidden; }
+.feed.no-scroll .slide canvas { touch-action: none; }
+
 .slide {
   position: relative;
   height: 100%;

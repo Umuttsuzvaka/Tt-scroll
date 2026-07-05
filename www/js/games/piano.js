@@ -1,9 +1,13 @@
-// Piano Tiles tarzı: düşen siyah karolara dokun, beyaza dokunma!
+// Piano Tiles tarzı: düşen siyah karolara dokun — her dokunuş şarkının bir notasını çalar!
+import { sound } from '../sound.js';
+import { MELODIES } from '../melodies.js';
+
 export const piano = {
   id: 'piano',
   name: 'Piyano Karoları',
   emoji: '🎹',
-  howTo: 'Siyah karolara dokun! Boş yere dokunursan veya karo kaçarsa oyun biter. 15 puandan sonra ÇİFT karolar gelir!',
+  howTo: 'Siyah karolara dokun — her dokunuş şarkıyı çalar! 🎵 Boşa basma, karo kaçırma. 15 puandan sonra ÇİFT karolar!',
+  quietTaps: true, // dokunma "bip"i melodiyi bozmasın
 
   init(s) {
     s.G = {
@@ -12,6 +16,8 @@ export const piano = {
       speed: 300,
       tileH: Math.max(130, s.h / 6),
       ripples: [],
+      song: MELODIES[Math.floor(Math.random() * MELODIES.length)],
+      noteIdx: 0,
     };
     // ekranı baştan karolarla doldur
     for (let y = -s.G.tileH; y > -s.h; y -= s.G.tileH) this.spawn(s, y);
@@ -40,6 +46,9 @@ export const piano = {
     }
     if (target && target.y + g.tileH > y - 40 && target.y < y + g.tileH) {
       target.hit = true;
+      // şarkının sıradaki notasını çal 🎵
+      sound.pianoNote(g.song.notes[g.noteIdx]);
+      g.noteIdx = (g.noteIdx + 1) % g.song.notes.length;
       s.addScore();
       g.speed += 5;
       g.ripples.push({ x: (target.lane + 0.5) * (s.w / g.lanes), y: target.y + g.tileH / 2, r: 10, life: 0.4 });
@@ -113,5 +122,17 @@ export const piano = {
       ctx.stroke();
     }
     ctx.globalAlpha = 1;
+
+    // çalan şarkının adı + ilerleme
+    const prog = Math.round((g.noteIdx / g.song.notes.length) * 100);
+    ctx.fillStyle = 'rgba(0,0,0,.55)';
+    ctx.beginPath();
+    ctx.roundRect(s.w / 2 - 110, s.h - 54, 220, 34, 17);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.font = '700 14px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`🎵 ${g.song.name} · %${prog}`, s.w / 2, s.h - 37);
   },
 };

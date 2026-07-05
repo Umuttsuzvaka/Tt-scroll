@@ -85,11 +85,17 @@ export class GameShell {
     this.drawFrame(); // arka planda oyunun ilk karesi görünsün
   }
 
+  // oyun oynanırken akış kaydırılamasın — yanlışlıkla kaydırma oyunu bozmasın
+  setScrollLock(lock) {
+    document.getElementById('feed')?.classList.toggle('no-scroll', lock);
+  }
+
   start() {
     this.hud.hideOverlay();
     this.setScore(0);
     this.game.init(this);
     this.state = 'playing';
+    this.setScrollLock(true);
     this.lastTime = performance.now();
     this.loop();
   }
@@ -97,6 +103,7 @@ export class GameShell {
   end() {
     if (this.state !== 'playing') return;
     this.state = 'over';
+    this.setScrollLock(false);
     cancelAnimationFrame(this.raf);
     const best = this.getBest();
     const isRecord = this.score > best;
@@ -126,7 +133,7 @@ export class GameShell {
     if (this.state === 'ready' || this.state === 'over') {
       this.start();
     } else if (this.state === 'playing') {
-      sound.tap();
+      if (!this.game.quietTaps) sound.tap();
       this.game.tap(this, x, y);
     }
   }
@@ -148,6 +155,7 @@ export class GameShell {
 
   destroy() {
     this.destroyed = true;
+    if (this.state === 'playing') this.setScrollLock(false);
     cancelAnimationFrame(this.raf);
     window.removeEventListener('resize', this.onResize);
     this.canvas.removeEventListener('click', this.onTap);
