@@ -4,14 +4,19 @@ TikTok tarzı dikey kaydırmalı **mini oyun akışı**. Her kaydırmada karşı
 
 ## Oyunlar
 
-| Oyun | Nasıl oynanır |
-|------|----------------|
-| 🐤 **Zıp Kuş** | Dokunarak zıpla, borulara çarpma |
-| 🎯 **Refleks** | Hedef kaybolmadan dokun, her seferinde hızlanır |
-| 🏗️ **Kule Yap** | Kayan bloğu tam üstüne bırak |
-| 🌈 **Renk Yakala** | Daire istenen renge dönünce dokun |
-| 🐹 **Köstebek Avı** | Köstebeklere dokun, 3 tanesini kaçırma |
-| ⚽ **Top Sektir** | Topa dokunarak havada tut |
+| Oyun | Esinlenme | Nasıl oynanır |
+|------|-----------|----------------|
+| 🐤 **Zıp Kuş** | Flappy Bird | Dokunarak zıpla, borulara çarpma |
+| 🎯 **Refleks** | — | Hedef kaybolmadan dokun, her seferinde hızlanır |
+| 🏗️ **Kule Yap** | Stack | Kayan bloğu tam üstüne bırak |
+| 🌈 **Renk Yakala** | — | Daire istenen renge dönünce dokun |
+| 🐹 **Köstebek Avı** | Whack-a-Mole | Köstebeklere dokun, 3 tanesini kaçırma |
+| ⚽ **Top Sektir** | Keepy-Up | Topa dokunarak havada tut |
+| 💎 **Cam Kır** | Smash Hit | Üzerine gelen camları dokunarak kır |
+| ⛏️ **Maden Kaz** | Minecraft | Blokları kaz, elmas topla, TNT'ye dokunma |
+| 🎹 **Piyano Karoları** | Piano Tiles | Düşen siyah karolara dokun |
+| 🍉 **Meyve Patlat** | Fruit Ninja | Meyveleri patlat, bombadan kaç |
+| 🏃 **Koşucu** | Subway Surfers | Sola/sağa dokunarak engellerden kaç |
 
 Tüm oyunlar **sadece dokunmayla** oynanır — dikey kaydırma her zaman bir sonraki oyuna geçirir (aynı TikTok gibi). Rekorlar cihazda saklanır.
 
