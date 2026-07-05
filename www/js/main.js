@@ -1,8 +1,21 @@
 import { games } from './games/index.js';
 import { GameShell } from './shell.js';
+import { getProfile, openProfileModal } from './profile.js';
+import { heartBurst } from './effects.js';
 
 const feed = document.getElementById('feed');
 const hint = document.getElementById('hint');
+
+// İlk açılışta profil oluşturma ekranı
+if (!getProfile()) {
+  openProfileModal({ firstTime: true, onSave: refreshProfileButtons });
+}
+
+function refreshProfileButtons(p) {
+  document.querySelectorAll('.side-btn.profile').forEach(btn => {
+    btn.firstChild.textContent = p.avatar;
+  });
+}
 
 // Oyunları karıştırıp sonsuz akış üret; art arda aynı oyun gelmesin
 let lastGameId = null;
@@ -36,17 +49,33 @@ function createSlide(game) {
   const side = document.createElement('div');
   side.className = 'side-bar';
   const likeCount = Math.floor(Math.random() * 900) + 100;
+  const avatar = getProfile()?.avatar || '🙂';
   side.innerHTML = `
+    <button class="side-btn profile"><span>${avatar}</span><span class="count">Profil</span></button>
     <button class="side-btn like">❤️<span class="count">${likeCount}</span></button>
     <button class="side-btn share">↗️<span class="count">Paylaş</span></button>`;
   slide.appendChild(side);
 
+  side.querySelector('.profile').addEventListener('click', () => {
+    openProfileModal({ onSave: refreshProfileButtons });
+  });
+
   const likeBtn = side.querySelector('.like');
-  likeBtn.addEventListener('click', () => likeBtn.classList.toggle('liked'));
+  likeBtn.addEventListener('click', () => {
+    const liked = likeBtn.classList.toggle('liked');
+    if (liked) heartBurst(slide);
+  });
+
   side.querySelector('.share').addEventListener('click', async () => {
-    const data = { title: 'TT Scroll', text: `${game.name} oynuyorum, sen de dene! 🎮` };
+    const p = getProfile();
+    const best = Number(localStorage.getItem('tt-scroll-best-' + game.id) || 0);
+    const who = p ? `${p.avatar} ${p.name}` : 'Bir oyuncu';
+    const text = best > 0
+      ? `${who}, TT Scroll'da ${game.emoji} ${game.name} oyununda ${best} puan yaptı! Beni geçebilir misin? 🎮🔥`
+      : `${who}, TT Scroll'da ${game.emoji} ${game.name} oynuyor. Sen de dene! 🎮`;
     try {
-      if (navigator.share) await navigator.share(data);
+      if (navigator.share) await navigator.share({ title: 'TT Scroll', text });
+      else await navigator.clipboard?.writeText(text);
     } catch { /* kullanıcı iptal etti */ }
   });
 
@@ -55,6 +84,7 @@ function createSlide(game) {
   slide.appendChild(overlay);
 
   const hud = {
+    root: slide,
     scoreEl: top.querySelector('.score'),
     bestEl: top.querySelector('.best'),
     overlay,

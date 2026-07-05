@@ -1,3 +1,16 @@
+import { sound, vibrate } from './sound.js';
+import { floatText, confettiBurst } from './effects.js';
+import { addStats } from './profile.js';
+
+const OVER_MSGS = [
+  'Az kaldı, bir daha! 🔥',
+  'Eller ısındı mı? 😏',
+  'Rekor seni bekliyor 👀',
+  'Pes etmek yok! 💪',
+  'Bu sefer olacak! 🚀',
+  'Isınma turuydu, değil mi? 😅',
+];
+
 // GameShell: her mini oyunun ortak altyapısı.
 // Oyun mantığı sadece { init, tap, update, draw } uygular;
 // döngü, durum (hazır/oynuyor/bitti), skor ve rekor buradan yönetilir.
@@ -46,7 +59,17 @@ export class GameShell {
     this.score = n;
     this.hud.scoreEl.textContent = n;
   }
-  addScore(n = 1) { this.setScore(this.score + n); }
+
+  addScore(n = 1) {
+    this.setScore(this.score + n);
+    sound.score();
+    vibrate(12);
+    // dokunuşla kazanıldıysa dokunulan yerde, değilse skorun altında "+1" göster
+    const fresh = this.lastTap && performance.now() - this.lastTap.t < 150;
+    const x = fresh ? this.lastTap.x : this.w - 50;
+    const y = fresh ? this.lastTap.y - 20 : 80;
+    floatText(this.hud.root, '+' + n, x, y);
+  }
 
   showReady() {
     this.state = 'ready';
@@ -78,9 +101,18 @@ export class GameShell {
     const best = this.getBest();
     const isRecord = this.score > best;
     if (isRecord) localStorage.setItem(this.bestKey(), String(this.score));
+    addStats(this.score);
+    vibrate(120);
+    if (isRecord) {
+      sound.record();
+      confettiBurst(this.hud.root);
+    } else {
+      sound.over();
+    }
     this.hud.showOverlay({
-      emoji: '💀',
+      emoji: isRecord ? '🏆' : '💀',
       title: 'Oyun Bitti!',
+      text: isRecord ? undefined : OVER_MSGS[Math.floor(Math.random() * OVER_MSGS.length)],
       finalScore: this.score,
       record: isRecord,
       button: 'Tekrar oyna',
@@ -89,9 +121,12 @@ export class GameShell {
 
   handleTap(x, y) {
     if (this.destroyed) return;
+    this.lastTap = { x, y, t: performance.now() };
+    sound.unlock();
     if (this.state === 'ready' || this.state === 'over') {
       this.start();
     } else if (this.state === 'playing') {
+      sound.tap();
       this.game.tap(this, x, y);
     }
   }
