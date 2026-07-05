@@ -1,0 +1,54 @@
+name: Android APK Derle
+
+on:
+  push:
+    branches: ["main", "claude/**"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Kodu indir
+        uses: actions/checkout@v4
+
+      - name: Node.js kur
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Java 17 kur
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Bağımlılıkları yükle
+        run: npm ci
+
+      - name: Web dosyalarını Android projesine kopyala
+        run: npx cap sync android
+
+      - name: Debug APK derle
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Release AAB derle (imzasız)
+        run: |
+          cd android
+          ./gradlew bundleRelease
+
+      - name: Debug APK'yı yükle (telefonda test için)
+        uses: actions/upload-artifact@v4
+        with:
+          name: tt-scroll-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Release AAB'yi yükle (Play Store için, imzalanmalı)
+        uses: actions/upload-artifact@v4
+        with:
+          name: tt-scroll-release-aab
+          path: android/app/build/outputs/bundle/release/app-release.aab

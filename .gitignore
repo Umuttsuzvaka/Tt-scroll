@@ -1,0 +1,16 @@
+node_modules/
+*.log
+.DS_Store
+
+# Android derleme çıktıları
+android/.gradle/
+android/build/
+android/app/build/
+android/app/release/
+android/local.properties
+android/.idea/
+
+# İmza anahtarı — ASLA commit'leme!
+*.keystore
+*.jks
+keystore.properties
