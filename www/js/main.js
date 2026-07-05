@@ -11,9 +11,13 @@ if (!getProfile()) {
   openProfileModal({ firstTime: true, onSave: refreshProfileButtons });
 }
 
+function profileFace(p) {
+  return p?.photo ? `<img class="pfp" src="${p.photo}" alt="">` : (p?.avatar || '🙂');
+}
+
 function refreshProfileButtons(p) {
   document.querySelectorAll('.side-btn.profile').forEach(btn => {
-    btn.firstChild.textContent = p.avatar;
+    btn.firstChild.innerHTML = profileFace(p);
   });
 }
 
@@ -49,9 +53,8 @@ function createSlide(game) {
   const side = document.createElement('div');
   side.className = 'side-bar';
   const likeCount = Math.floor(Math.random() * 900) + 100;
-  const avatar = getProfile()?.avatar || '🙂';
   side.innerHTML = `
-    <button class="side-btn profile"><span>${avatar}</span><span class="count">Profil</span></button>
+    <button class="side-btn profile"><span>${profileFace(getProfile())}</span><span class="count">Profil</span></button>
     <button class="side-btn like">❤️<span class="count">${likeCount}</span></button>
     <button class="side-btn share">↗️<span class="count">Paylaş</span></button>`;
   slide.appendChild(side);

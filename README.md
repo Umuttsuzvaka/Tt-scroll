@@ -132,6 +132,30 @@ cd android && ./gradlew bundleRelease
 ### Sonraki güncellemelerde
 `android/app/build.gradle` içinde `versionCode`'u 1 artır (ör. 1 → 2), `versionName`'i güncelle (ör. "1.0" → "1.1"), yeniden `bundleRelease` derle ve yeni sürüm olarak yükle.
 
+## 🔐 Google ile Giriş kurulumu
+
+Uygulamada "Google ile giriş yap" butonu hazır ama çalışması için kendi Google
+kimliğini (Client ID) alman gerekiyor — bu kimlik senin adına kayıtlı olmalı,
+ben oluşturamam. Adımlar:
+
+1. [console.cloud.google.com](https://console.cloud.google.com) → yeni proje oluştur (ör. "TT Scroll")
+2. **APIs & Services → OAuth consent screen** → "External" seç, uygulama adını ve e-postanı yaz, kaydet
+3. **APIs & Services → Credentials → Create Credentials → OAuth client ID**
+   - Tarayıcıda test için: tür **Web application**, "Authorized JavaScript origins" alanına `http://localhost:8080` ekle
+   - Android (Play Store) için: tür **Android**, paket adı `com.umut.ttscroll`, SHA-1 imzasını gir
+     (SHA-1'i öğrenmek için: `keytool -list -v -keystore tt-scroll.keystore -alias ttscroll`)
+4. Aldığın Client ID'yi `www/js/config.js` içine yapıştır:
+   ```js
+   export const GOOGLE_CLIENT_ID = '1234567890-abcdefg.apps.googleusercontent.com';
+   ```
+5. `npx cap sync android` deyip yeniden derle
+
+> Not: Client ID yapılandırılmadan uygulama misafir profiliyle sorunsuz çalışır —
+> buton kullanıcıya kurulum gerektiğini söyler. Play Store sürümünde en iyi deneyim
+> için `@capgo/capacitor-social-login` gibi bir Capacitor eklentisiyle yerel Google
+> girişine geçmek isteyebilirsin; mevcut kod buna kolayca bağlanacak şekilde
+> `www/js/google-auth.js` içinde ayrıldı.
+
 ## 🧩 Yeni oyun ekleme
 
 1. `www/js/games/` içine yeni dosya aç ve şu arayüzü uygula:

@@ -1,11 +1,12 @@
 // Fruit Ninja tarzı: havaya fırlayan meyvelere dokun, bombaya dokunma!
 const FRUITS = ['🍉', '🍎', '🍌', '🍊', '🍓', '🥝'];
+const JUICE = { '🍉': '#ff5c7a', '🍎': '#e63946', '🍌': '#ffd93d', '🍊': '#ff9f1c', '🍓': '#ef476f', '🥝': '#80b918' };
 
 export const fruit = {
   id: 'fruit',
   name: 'Meyve Patlat',
   emoji: '🍉',
-  howTo: 'Meyvelere dokunarak patlat! Bombaya dokunma, 3 meyve kaçırırsan oyun biter.',
+  howTo: 'Meyvelere dokunarak patlat! 1 saniyede 3 meyve = KOMBO +2. Bombaya dokunma, 3 meyve kaçırma!',
 
   init(s) {
     s.G = {
@@ -14,6 +15,10 @@ export const fruit = {
       spawnEvery: 1.0,
       missed: 0,
       splats: [],
+      juice: [],
+      pops: [],      // kombo takibi için son patlatma zamanları
+      spawnCount: 0,
+      t: 0,
     };
   },
 
@@ -26,29 +31,68 @@ export const fruit = {
         g.items.splice(i, 1);
         s.addScore();
         g.spawnEvery = Math.max(0.45, g.spawnEvery * 0.97);
-        g.splats.push({ x: it.x, y: it.y, emoji: '💥', life: 0.35 });
+        g.splats.push({ x: it.x, y: it.y, emoji: '💥', text: null, life: 0.35 });
+        // meyve suyu parçacıkları
+        const color = JUICE[it.emoji] || '#ff5c7a';
+        for (let k = 0; k < 9; k++) {
+          g.juice.push({
+            x: it.x, y: it.y,
+            vx: (Math.random() - 0.5) * 420, vy: -Math.random() * 320,
+            color, r: 3 + Math.random() * 5, life: 0.6,
+          });
+        }
+        // kombo: 1 saniye içinde 3 patlatma
+        g.pops.push(g.t);
+        g.pops = g.pops.filter(p => g.t - p < 1);
+        if (g.pops.length >= 3) {
+          g.pops = [];
+          s.addScore(2);
+          g.splats.push({ x: it.x, y: it.y - 60, emoji: null, text: 'KOMBO! 🔥', life: 0.8 });
+        }
         return;
       }
     }
   },
 
+  launch(s, extraVx = 0) {
+    const g = s.G;
+    const fromLeft = Math.random() < 0.5;
+    g.items.push({
+      x: fromLeft ? s.w * 0.15 + Math.random() * s.w * 0.2 : s.w * 0.65 + Math.random() * s.w * 0.2,
+      y: s.h + 40,
+      vx: (fromLeft ? 1 : -1) * (40 + Math.random() * 90) + extraVx,
+      vy: -(s.h * 1.15 + Math.random() * s.h * 0.25),
+      bomb: Math.random() < 0.16,
+      emoji: FRUITS[Math.floor(Math.random() * FRUITS.length)],
+      spin: Math.random() * 4 - 2,
+      rot: 0,
+    });
+  },
+
   update(s, dt) {
     const g = s.G;
+    g.t += dt;
     g.spawnTimer -= dt;
     if (g.spawnTimer <= 0) {
       g.spawnTimer = g.spawnEvery;
-      const fromLeft = Math.random() < 0.5;
-      g.items.push({
-        x: fromLeft ? s.w * 0.15 + Math.random() * s.w * 0.2 : s.w * 0.65 + Math.random() * s.w * 0.2,
-        y: s.h + 40,
-        vx: (fromLeft ? 1 : -1) * (40 + Math.random() * 90),
-        vy: -(s.h * 1.15 + Math.random() * s.h * 0.25),
-        bomb: Math.random() < 0.16,
-        emoji: FRUITS[Math.floor(Math.random() * FRUITS.length)],
-        spin: Math.random() * 4 - 2,
-        rot: 0,
-      });
+      g.spawnCount++;
+      // her 4. atış: 3-4 meyvelik yaylım!
+      if (g.spawnCount % 4 === 0) {
+        const n = 3 + Math.floor(Math.random() * 2);
+        for (let k = 0; k < n; k++) this.launch(s, (k - n / 2) * 40);
+        g.spawnTimer = g.spawnEvery * 1.6;
+      } else {
+        this.launch(s);
+      }
     }
+
+    for (const j of g.juice) {
+      j.vy += 1000 * dt;
+      j.x += j.vx * dt;
+      j.y += j.vy * dt;
+      j.life -= dt;
+    }
+    g.juice = g.juice.filter(j => j.life > 0);
 
     for (let i = g.items.length - 1; i >= 0; i--) {
       const it = g.items[i];
@@ -88,10 +132,27 @@ export const fruit = {
       ctx.restore();
     }
 
-    ctx.font = '44px serif';
+    // meyve suyu sıçramaları
+    for (const j of s.G.juice) {
+      ctx.globalAlpha = Math.max(0, j.life / 0.6);
+      ctx.fillStyle = j.color;
+      ctx.beginPath();
+      ctx.arc(j.x, j.y, j.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
     for (const sp of s.G.splats) {
-      ctx.globalAlpha = sp.life / 0.35;
-      ctx.fillText(sp.emoji, sp.x, sp.y);
+      if (sp.text) {
+        ctx.globalAlpha = Math.min(1, sp.life / 0.4);
+        ctx.font = '900 30px sans-serif';
+        ctx.fillStyle = '#ffd700';
+        ctx.fillText(sp.text, sp.x, sp.y);
+      } else {
+        ctx.globalAlpha = sp.life / 0.35;
+        ctx.font = '44px serif';
+        ctx.fillText(sp.emoji, sp.x, sp.y);
+      }
     }
     ctx.globalAlpha = 1;
 

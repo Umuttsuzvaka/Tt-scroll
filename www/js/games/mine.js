@@ -1,11 +1,17 @@
 // Minecraft tarzı madencilik: blokları kaz, elmas topla, TNT'den kaç
 const TYPES = [
-  { id: 'dirt', hp: 1, pts: 0, weight: 30 },
-  { id: 'stone', hp: 2, pts: 1, weight: 35 },
+  { id: 'dirt', hp: 1, pts: 0, weight: 28 },
+  { id: 'stone', hp: 2, pts: 1, weight: 33 },
   { id: 'diamond', hp: 1, pts: 5, weight: 12 },
   { id: 'gold', hp: 1, pts: 3, weight: 13 },
+  { id: 'emerald', hp: 3, pts: 10, weight: 4 },
   { id: 'tnt', hp: 1, pts: 0, weight: 10 },
 ];
+
+const BLOCK_COLORS = {
+  dirt: '#8a5a2b', stone: '#8d8d8d', diamond: '#5bd8d0',
+  gold: '#d9a520', emerald: '#2ecc71', tnt: '#c0392b',
+};
 
 function randType() {
   const total = TYPES.reduce((a, t) => a + t.weight, 0);
@@ -25,13 +31,14 @@ export const mine = {
   id: 'mine',
   name: 'Maden Kaz',
   emoji: '⛏️',
-  howTo: 'Blokları kaz! Elmas +5, altın +3, taş +1. TNT\'ye dokunursan patlar! Süre: 30 sn',
+  howTo: 'Blokları kaz! Zümrüt +10 (3 vuruş), elmas +5, altın +3, taş +1. TNT\'ye dokunursan patlar! Süre: 30 sn',
 
   init(s) {
     s.G = {
       cols: 4, rows: 5,
       grid: Array.from({ length: 20 }, newCell),
       time: 30,
+      particles: [],
     };
   },
 
@@ -52,6 +59,14 @@ export const mine = {
         const c = g.grid[i];
         if (c.type.id === 'tnt') return s.end();
         c.hp -= 1;
+        // kazma parçacıkları
+        for (let k = 0; k < 10; k++) {
+          g.particles.push({
+            x: r.x + r.cell / 2, y: r.y + r.cell / 2,
+            vx: (Math.random() - 0.5) * 320, vy: -Math.random() * 260,
+            color: BLOCK_COLORS[c.type.id], life: 0.5,
+          });
+        }
         if (c.hp <= 0) {
           if (c.type.pts) s.addScore(c.type.pts);
           g.grid[i] = newCell();
@@ -62,14 +77,33 @@ export const mine = {
   },
 
   update(s, dt) {
-    s.G.time -= dt;
-    if (s.G.time <= 0) s.end();
+    const g = s.G;
+    g.time -= dt;
+    for (const p of g.particles) {
+      p.vy += 900 * dt;
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.life -= dt;
+    }
+    g.particles = g.particles.filter(p => p.life > 0);
+    if (g.time <= 0) s.end();
   },
 
   draw(s, ctx) {
     const g = s.G;
-    ctx.fillStyle = '#2a2118';
+    // mağara arka planı + meşale ışıkları
+    const bg = ctx.createLinearGradient(0, 0, 0, s.h);
+    bg.addColorStop(0, '#332617');
+    bg.addColorStop(1, '#1a120a');
+    ctx.fillStyle = bg;
     ctx.fillRect(0, 0, s.w, s.h);
+    for (const [tx, ty] of [[0.08, 0.12], [0.92, 0.12], [0.08, 0.92], [0.92, 0.92]]) {
+      const torch = ctx.createRadialGradient(s.w * tx, s.h * ty, 5, s.w * tx, s.h * ty, s.w * 0.35);
+      torch.addColorStop(0, 'rgba(255,150,40,.16)');
+      torch.addColorStop(1, 'transparent');
+      ctx.fillStyle = torch;
+      ctx.fillRect(0, 0, s.w, s.h);
+    }
 
     for (let i = 0; i < g.grid.length; i++) {
       const r = this.cellRect(s, i);
@@ -77,11 +111,13 @@ export const mine = {
       const pad = 3;
       const bx = r.x + pad, by = r.y + pad, bs = r.cell - pad * 2;
 
-      const base = {
-        dirt: '#8a5a2b', stone: '#8d8d8d', diamond: '#5bd8d0', gold: '#d9a520', tnt: '#c0392b',
-      }[c.type.id];
-      ctx.fillStyle = base;
+      if (c.type.id === 'diamond' || c.type.id === 'emerald') {
+        ctx.shadowColor = BLOCK_COLORS[c.type.id];
+        ctx.shadowBlur = 14;
+      }
+      ctx.fillStyle = BLOCK_COLORS[c.type.id];
       ctx.fillRect(bx, by, bs, bs);
+      ctx.shadowBlur = 0;
 
       // blok kenarı (Minecraft görünümü: üst açık, alt koyu)
       ctx.fillStyle = 'rgba(255,255,255,.25)';
@@ -96,7 +132,7 @@ export const mine = {
       }
 
       // tip simgesi
-      const icon = { diamond: '💎', gold: '🪙', tnt: '🧨' }[c.type.id];
+      const icon = { diamond: '💎', gold: '🪙', emerald: '🟢', tnt: '🧨' }[c.type.id];
       if (icon) {
         ctx.font = `${bs * 0.4}px serif`;
         ctx.textAlign = 'center';
@@ -104,8 +140,8 @@ export const mine = {
         ctx.fillText(icon, bx + bs / 2, by + bs / 2);
       }
 
-      // hasarlı taş çatlağı
-      if (c.type.id === 'stone' && c.hp === 1) {
+      // hasarlı blok çatlağı
+      if (c.hp < c.type.hp) {
         ctx.strokeStyle = 'rgba(0,0,0,.55)';
         ctx.lineWidth = 2;
         ctx.beginPath();
@@ -117,6 +153,14 @@ export const mine = {
         ctx.stroke();
       }
     }
+
+    // kazma parçacıkları
+    for (const p of g.particles) {
+      ctx.globalAlpha = Math.max(0, p.life / 0.5);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(p.x, p.y, 6, 6);
+    }
+    ctx.globalAlpha = 1;
 
     // süre çubuğu
     const frac = Math.max(0, g.time / 30);
