@@ -39,6 +39,39 @@ export class GameShell {
     canvas.addEventListener('click', this.onTap);
     hud.overlay.addEventListener('click', this.onTap);
 
+    // parmak takibi: sürükleme (swipe) ve jest (gesture) destekli oyunlar için
+    this.pointer = { down: false, x: 0, y: 0, sx: 0, sy: 0 };
+    const pt = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    };
+    this.onDown = (e) => {
+      const p = pt(e);
+      this.pointer = { down: true, x: p.x, y: p.y, sx: p.x, sy: p.y };
+      if (this.state === 'playing' && this.game.swipe) this.game.swipe(this, p.x, p.y, p.x, p.y);
+    };
+    this.onMove = (e) => {
+      if (!this.pointer.down || this.state !== 'playing') return;
+      const p = pt(e);
+      if (this.game.swipe) this.game.swipe(this, p.x, p.y, this.pointer.x, this.pointer.y);
+      this.pointer.x = p.x;
+      this.pointer.y = p.y;
+    };
+    this.onUp = () => {
+      if (this.pointer.down && this.state === 'playing' && this.game.gesture) {
+        const dx = this.pointer.x - this.pointer.sx;
+        const dy = this.pointer.y - this.pointer.sy;
+        if (Math.hypot(dx, dy) > 30) {
+          const dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+          this.game.gesture(this, dir);
+        }
+      }
+      this.pointer.down = false;
+    };
+    canvas.addEventListener('pointerdown', this.onDown);
+    canvas.addEventListener('pointermove', this.onMove);
+    window.addEventListener('pointerup', this.onUp);
+
     this.showReady();
   }
 
@@ -160,5 +193,8 @@ export class GameShell {
     window.removeEventListener('resize', this.onResize);
     this.canvas.removeEventListener('click', this.onTap);
     this.hud.overlay.removeEventListener('click', this.onTap);
+    this.canvas.removeEventListener('pointerdown', this.onDown);
+    this.canvas.removeEventListener('pointermove', this.onMove);
+    window.removeEventListener('pointerup', this.onUp);
   }
 }

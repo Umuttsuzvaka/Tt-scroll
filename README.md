@@ -17,6 +17,17 @@ TikTok tarzı dikey kaydırmalı **mini oyun akışı**. Her kaydırmada karşı
 | 🎹 **Piyano Karoları** | Piano Tiles | Düşen siyah karolara dokun |
 | 🍉 **Meyve Patlat** | Fruit Ninja | Meyveleri patlat, bombadan kaç |
 | 🏃 **Koşucu** | Subway Surfers | Sola/sağa dokunarak engellerden kaç |
+| 🔢 **2048 Mini** | 2048 | Kaydırarak taşları birleştir |
+| 🐍 **Yılan** | Snake | Kaydırarak yönlendir, elma ye |
+| 🏓 **Pinpon** | Pong | Raketi sürükle, yapay zekâyı yen |
+| 🧱 **Tuğla Kır** | Arkanoid | Raketi sürükle, tuğlaları kır |
+| 🦘 **Zıpla Zıpla** | Doodle Jump | Parmağınla yönlendir, yükseğe zıpla |
+| 🪓 **Oduncu** | Timberman | Sola/sağa keserken dallardan kaç |
+| 🔪 **Bıçak Fırlat** | Knife Hit | Dönen kütüğe bıçak sapla |
+| 🐔 **Yolu Geç** | Crossy Road | Dokun: ilerle, kaydır: yana kaç |
+| 🧠 **Hafıza Sırası** | Simon | Yanan renk sırasını tekrarla |
+| 🎡 **Renk Geçidi** | Color Switch | Kendi renginden geç |
+| 🏀 **Basket At** | — | Doğru anda bırak, sayıyı bas |
 
 Tüm oyunlar **sadece dokunmayla** oynanır — dikey kaydırma her zaman bir sonraki oyuna geçirir (aynı TikTok gibi). Rekorlar cihazda saklanır.
 

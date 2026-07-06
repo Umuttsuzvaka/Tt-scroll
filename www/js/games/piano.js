@@ -1,6 +1,6 @@
 // Piano Tiles tarzı: düşen siyah karolara dokun — her dokunuş şarkının bir notasını çalar!
 import { sound } from '../sound.js';
-import { MELODIES } from '../melodies.js';
+import { randomMelody } from '../melodies.js';
 
 export const piano = {
   id: 'piano',
@@ -16,7 +16,7 @@ export const piano = {
       speed: 300,
       tileH: Math.max(130, s.h / 6),
       ripples: [],
-      song: MELODIES[Math.floor(Math.random() * MELODIES.length)],
+      song: randomMelody(),
       noteIdx: 0,
     };
     // ekranı baştan karolarla doldur

@@ -1,6 +1,15 @@
 // Telifsiz melodiler — MIDI nota numaraları (A4 = 69).
 // Not: Gerçek şarkılar (Drake vb.) telifli olduğu için uygulamaya gömülemez;
 // "Gece Trap'i" o havada yazılmış özgün bir melodidir.
+// Aynı şarkı art arda gelmesin
+let lastIdx = -1;
+export function randomMelody() {
+  let i;
+  do { i = Math.floor(Math.random() * MELODIES.length); } while (i === lastIdx && MELODIES.length > 1);
+  lastIdx = i;
+  return MELODIES[i];
+}
+
 export const MELODIES = [
   {
     name: 'Für Elise',
