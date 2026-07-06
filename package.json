@@ -1,7 +1,7 @@
 {
-  "name": "tt-scroll",
+  "name": "scroll-gaming",
   "version": "1.3.0",
-  "description": "TikTok tarzı kaydırmalı mini oyun akışı — her kaydırmada yeni bir oyun!",
+  "description": "Scroll Gaming — TikTok tarzı kaydırmalı mini oyun akışı: her kaydırmada yeni bir oyun!",
   "scripts": {
     "start": "npx http-server www -p 8080 -c-1",
     "cap:sync": "npx cap sync android",

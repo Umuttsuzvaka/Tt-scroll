@@ -1,4 +1,4 @@
-# 🎮 TT Scroll — Kaydır, Oyna!
+# 🎮 Scroll Gaming — Kaydır, Oyna!
 
 TikTok tarzı dikey kaydırmalı **mini oyun akışı**. Her kaydırmada karşına yeni bir oyun çıkar — beğen, oyna, rekor kır, kaydır!
 
@@ -124,7 +124,7 @@ cd android && ./gradlew bundleRelease
 
 ### Adım 4: Play Console'da uygulama oluştur
 1. Play Console → **Uygulama oluştur**
-2. Ad: **TT Scroll** (veya istediğin ad), dil: Türkçe, tür: **Oyun**, ücretsiz
+2. Ad: **Scroll Gaming** (veya istediğin ad), dil: Türkçe, tür: **Oyun**, ücretsiz
 3. **Store girişi** bölümünü doldur:
    - Kısa açıklama (80 karakter): *"Kaydır ve oyna! Her kaydırmada yeni bir mini oyun."*
    - Uzun açıklama, uygulama simgesi (512×512), öne çıkan görsel (1024×500)
@@ -149,7 +149,7 @@ Uygulamada "Google ile giriş yap" butonu hazır ama çalışması için kendi G
 kimliğini (Client ID) alman gerekiyor — bu kimlik senin adına kayıtlı olmalı,
 ben oluşturamam. Adımlar:
 
-1. [console.cloud.google.com](https://console.cloud.google.com) → yeni proje oluştur (ör. "TT Scroll")
+1. [console.cloud.google.com](https://console.cloud.google.com) → yeni proje oluştur (ör. "Scroll Gaming")
 2. **APIs & Services → OAuth consent screen** → "External" seç, uygulama adını ve e-postanı yaz, kaydet
 3. **APIs & Services → Credentials → Create Credentials → OAuth client ID**
    - Tarayıcıda test için: tür **Web application**, "Authorized JavaScript origins" alanına `http://localhost:8080` ekle
