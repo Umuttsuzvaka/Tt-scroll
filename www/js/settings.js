@@ -2,7 +2,7 @@
 import { music } from './music.js';
 import { openProfileModal, getStats } from './profile.js';
 
-export const APP_VERSION = '1.3';
+export const APP_VERSION = '1.4';
 
 function toggleRow(id, icon, label, checked) {
   return `
@@ -29,7 +29,7 @@ export function openSettings({ onProfileChange } = {}) {
       ${toggleRow('vibro', '📳', 'Titreşim', localStorage.getItem('tt-scroll-vibro') !== '0')}
       <button class="set-btn profile-edit">👤 Profili düzenle</button>
       <button class="set-btn danger reset-scores">🗑️ Rekorları sıfırla</button>
-      <div class="set-version">TT Scroll v${APP_VERSION} · Umut yapımı 🎮</div>
+      <div class="set-version">Scroll Gaming v${APP_VERSION} · Umut yapımı 🎮</div>
       <button class="close-btn">Kapat</button>
     </div>`;
 

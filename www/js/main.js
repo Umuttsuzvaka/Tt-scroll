@@ -34,6 +34,12 @@ function profileFace(p) {
   return p?.photo ? `<img class="pfp" src="${p.photo}" alt="">` : (p?.avatar || '🙂');
 }
 
+// Beğeni sayısını kısa formata çevir (1250 → "1.2K")
+function formatCount(n) {
+  if (n >= 1000) return (n / 1000).toFixed(1).replace('.0', '') + 'K';
+  return String(n);
+}
+
 function refreshProfileButtons(p) {
   document.querySelectorAll('.side-btn.profile').forEach(btn => {
     btn.firstChild.innerHTML = profileFace(p);
@@ -71,10 +77,10 @@ function createSlide(game) {
 
   const side = document.createElement('div');
   side.className = 'side-bar';
-  const likeCount = Math.floor(Math.random() * 900) + 100;
+  let likeCount = Math.floor(Math.random() * 9400) + 150;
   side.innerHTML = `
     <button class="side-btn profile"><span>${profileFace(getProfile())}</span><span class="count">Profil</span></button>
-    <button class="side-btn like">❤️<span class="count">${likeCount}</span></button>
+    <button class="side-btn like">❤️<span class="count">${formatCount(likeCount)}</span></button>
     <button class="side-btn share">↗️<span class="count">Paylaş</span></button>`;
   slide.appendChild(side);
 
@@ -85,6 +91,8 @@ function createSlide(game) {
   const likeBtn = side.querySelector('.like');
   likeBtn.addEventListener('click', () => {
     const liked = likeBtn.classList.toggle('liked');
+    likeCount += liked ? 1 : -1;
+    likeBtn.querySelector('.count').textContent = formatCount(likeCount);
     if (liked) heartBurst(slide);
   });
 
@@ -93,10 +101,10 @@ function createSlide(game) {
     const best = Number(localStorage.getItem('tt-scroll-best-' + game.id) || 0);
     const who = p ? `${p.avatar} ${p.name}` : 'Bir oyuncu';
     const text = best > 0
-      ? `${who}, TT Scroll'da ${game.emoji} ${game.name} oyununda ${best} puan yaptı! Beni geçebilir misin? 🎮🔥`
-      : `${who}, TT Scroll'da ${game.emoji} ${game.name} oynuyor. Sen de dene! 🎮`;
+      ? `${who}, Scroll Gaming'de ${game.emoji} ${game.name} oyununda ${best} puan yaptı! Beni geçebilir misin? 🎮🔥`
+      : `${who}, Scroll Gaming'de ${game.emoji} ${game.name} oynuyor. Sen de dene! 🎮`;
     try {
-      if (navigator.share) await navigator.share({ title: 'TT Scroll', text });
+      if (navigator.share) await navigator.share({ title: 'Scroll Gaming', text });
       else await navigator.clipboard?.writeText(text);
     } catch { /* kullanıcı iptal etti */ }
   });
@@ -111,13 +119,16 @@ function createSlide(game) {
     bestEl: top.querySelector('.best'),
     overlay,
     showOverlay({ emoji, title, text, finalScore, record, button }) {
+      // İçeriği kart paneline sararak sinematik bir giriş animasyonu veriyoruz
       overlay.innerHTML = `
-        <div class="big-emoji">${emoji}</div>
-        <h2>${title}</h2>
-        ${text ? `<p>${text}</p>` : ''}
-        ${finalScore !== undefined ? `<div class="final-score">${finalScore}</div>` : ''}
-        ${record ? '<div class="new-record">🏆 YENİ REKOR!</div>' : ''}
-        <div class="tap-note">${button}</div>`;
+        <div class="overlay-card">
+          <div class="big-emoji">${emoji}</div>
+          <h2>${title}</h2>
+          ${text ? `<p>${text}</p>` : ''}
+          ${finalScore !== undefined ? `<div class="final-score">${finalScore}</div>` : ''}
+          ${record ? '<div class="new-record">🏆 YENİ REKOR!</div>' : ''}
+          <div class="tap-note">${button}</div>
+        </div>`;
       overlay.classList.remove('hidden');
     },
     hideOverlay() { overlay.classList.add('hidden'); },
