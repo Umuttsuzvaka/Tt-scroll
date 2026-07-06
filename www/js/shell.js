@@ -1,6 +1,7 @@
 import { sound, vibrate } from './sound.js';
 import { floatText, confettiBurst } from './effects.js';
 import { addStats } from './profile.js';
+import { music } from './music.js';
 
 const OVER_MSGS = [
   'Az kaldı, bir daha! 🔥',
@@ -129,6 +130,7 @@ export class GameShell {
     this.game.init(this);
     this.state = 'playing';
     this.setScrollLock(true);
+    music.duck(true); // oyun sırasında müziği kıs
     this.lastTime = performance.now();
     this.loop();
   }
@@ -137,6 +139,7 @@ export class GameShell {
     if (this.state !== 'playing') return;
     this.state = 'over';
     this.setScrollLock(false);
+    music.duck(false);
     cancelAnimationFrame(this.raf);
     const best = this.getBest();
     const isRecord = this.score > best;
@@ -188,7 +191,10 @@ export class GameShell {
 
   destroy() {
     this.destroyed = true;
-    if (this.state === 'playing') this.setScrollLock(false);
+    if (this.state === 'playing') {
+      this.setScrollLock(false);
+      music.duck(false);
+    }
     cancelAnimationFrame(this.raf);
     window.removeEventListener('resize', this.onResize);
     this.canvas.removeEventListener('click', this.onTap);

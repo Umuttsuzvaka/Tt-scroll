@@ -49,5 +49,6 @@ export const sound = {
 };
 
 export function vibrate(ms) {
+  if (localStorage.getItem('tt-scroll-vibro') === '0') return;
   try { navigator.vibrate?.(ms); } catch { }
 }

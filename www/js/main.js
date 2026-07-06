@@ -2,14 +2,33 @@ import { games } from './games/index.js';
 import { GameShell } from './shell.js';
 import { getProfile, openProfileModal } from './profile.js';
 import { heartBurst } from './effects.js';
+import { music } from './music.js';
+import { openSettings } from './settings.js';
 
 const feed = document.getElementById('feed');
 const hint = document.getElementById('hint');
 
-// İlk açılışta profil oluşturma ekranı
-if (!getProfile()) {
-  openProfileModal({ firstTime: true, onSave: refreshProfileButtons });
-}
+// Giriş ekranı: BAŞLA'ya basınca kapanır, müzik başlar
+const splash = document.getElementById('splash');
+const musicBtn = document.getElementById('music-btn');
+musicBtn.textContent = music.enabled() ? '🎵' : '🔇';
+
+document.getElementById('start-btn').addEventListener('click', () => {
+  splash.classList.add('hidden');
+  music.start(); // kullanıcı dokunuşu = ses izni
+  if (!getProfile()) {
+    openProfileModal({ firstTime: true, onSave: refreshProfileButtons });
+  }
+});
+
+musicBtn.addEventListener('click', () => {
+  music.setEnabled(!music.enabled());
+  musicBtn.textContent = music.enabled() ? '🎵' : '🔇';
+});
+
+document.getElementById('settings-btn').addEventListener('click', () => {
+  openSettings({ onProfileChange: refreshProfileButtons });
+});
 
 function profileFace(p) {
   return p?.photo ? `<img class="pfp" src="${p.photo}" alt="">` : (p?.avatar || '🙂');

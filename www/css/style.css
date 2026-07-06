@@ -131,6 +131,26 @@ html, body {
   padding: 24px;
 }
 .overlay.hidden { display: none; }
+/* ince film grain dokusu — sinematik doku katmanı */
+.overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('../assets/textures/grain3.png');
+  background-size: 500px;
+  opacity: .05;
+  pointer-events: none;
+}
+.modal-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 24px;
+  background-image: url('../assets/textures/grain2.png');
+  background-size: 600px;
+  opacity: .04;
+  pointer-events: none;
+}
 .overlay .big-emoji { font-size: 64px; }
 .overlay h2 { font-size: 26px; font-weight: 900; }
 .overlay p { font-size: 15px; opacity: .85; }
@@ -175,6 +195,7 @@ html, body {
   width: 100%;
   max-width: 360px;
   background: #16162a;
+  position: relative;
   border: 1px solid rgba(255,255,255,.1);
   border-radius: 24px;
   padding: 24px;
@@ -356,6 +377,160 @@ html, body {
   15% { opacity: 1; transform: translateY(-20px) scale(1.2); }
   100% { opacity: 0; transform: translateY(-190px) scale(1) rotate(-12deg); }
 }
+
+/* ---- Giriş ekranı ---- */
+#splash {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background: linear-gradient(160deg, #12071f 0%, #1e0b38 45%, #3a1050 100%);
+  overflow: hidden;
+  transition: opacity .45s, visibility .45s;
+}
+#splash::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('../assets/textures/grain1.png');
+  background-size: 700px;
+  opacity: .045;
+  pointer-events: none;
+}
+#splash.hidden { opacity: 0; visibility: hidden; }
+.splash-emojis span {
+  position: absolute;
+  left: var(--x);
+  bottom: -60px;
+  font-size: 34px;
+  opacity: .5;
+  animation: rise 7s linear infinite;
+  animation-delay: var(--d);
+}
+@keyframes rise {
+  0% { transform: translateY(0) rotate(0); opacity: 0; }
+  12% { opacity: .55; }
+  100% { transform: translateY(-110vh) rotate(50deg); opacity: 0; }
+}
+.logo {
+  font-size: 64px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  line-height: .95;
+  text-align: center;
+  z-index: 1;
+}
+.logo span {
+  display: block;
+  background: linear-gradient(90deg, #fe2c55, #8a2be2, #3d9bff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.tagline { font-size: 16px; opacity: .8; z-index: 1; }
+.splash-badge {
+  font-size: 14px;
+  font-weight: 700;
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.18);
+  z-index: 1;
+}
+#start-btn {
+  margin-top: 18px;
+  padding: 16px 38px;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #fe2c55, #8a2be2);
+  color: #fff;
+  font-size: 17px;
+  font-weight: 900;
+  letter-spacing: .5px;
+  cursor: pointer;
+  z-index: 1;
+  box-shadow: 0 8px 30px rgba(254,44,85,.45);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+.splash-ver {
+  position: absolute;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  font-size: 12px;
+  opacity: .45;
+}
+
+/* ---- Üst butonlar (müzik + ayarlar) ---- */
+.top-buttons {
+  position: fixed;
+  top: calc(12px + env(safe-area-inset-top));
+  right: 12px;
+  display: flex;
+  gap: 8px;
+  z-index: 50;
+}
+.top-buttons button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,.13);
+  backdrop-filter: blur(4px);
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+/* ---- Ayarlar satırları ---- */
+.set-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(255,255,255,.05);
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+}
+.set-row input { display: none; }
+.set-row .switch {
+  width: 46px;
+  height: 26px;
+  border-radius: 13px;
+  background: rgba(255,255,255,.18);
+  position: relative;
+  transition: background .2s;
+  flex-shrink: 0;
+}
+.set-row .switch::after {
+  content: '';
+  position: absolute;
+  top: 3px; left: 3px;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform .2s;
+}
+.set-row input:checked + .switch { background: #2de2a3; }
+.set-row input:checked + .switch::after { transform: translateX(20px); }
+.set-btn {
+  width: 100%;
+  padding: 13px;
+  border: none;
+  border-radius: 14px;
+  background: rgba(255,255,255,.08);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.set-btn.danger { background: rgba(254,44,85,.16); color: #ff8aa3; }
+.set-version { font-size: 12px; opacity: .5; margin-top: 4px; }
 
 /* ---- Kaydırma ipucu ---- */
 .scroll-hint {
