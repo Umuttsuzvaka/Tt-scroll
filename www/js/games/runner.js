@@ -13,6 +13,7 @@ export const runner = {
       coins: [],
       speed: s.h * 0.45,
       spawnTimer: 1,
+      lastBlocked: [], // adalet: son dalgada engellenen şeritler
       roadOffset: 0,
       buildings: Array.from({ length: 10 }, (_, i) => ({
         x: i / 10 + Math.random() * 0.05,
@@ -48,15 +49,21 @@ export const runner = {
     g.spawnTimer -= dt;
     if (g.spawnTimer <= 0) {
       g.spawnTimer = Math.max(0.55, 1.05 - s.score * 0.01);
-      const open = Math.floor(Math.random() * 3);
-      const lanes = [0, 1, 2].filter(l => l !== open);
-      const count = Math.random() < 0.4 ? 2 : 1;
-      for (const l of lanes.slice(0, count)) {
+      // adalet kuralı: son dalgada kapalı olan şeritler bu dalgada açık kalır
+      const candidates = [0, 1, 2].filter(l => !g.lastBlocked.includes(l));
+      const count = Math.min(candidates.length, Math.random() < 0.4 ? 2 : 1);
+      const blocked = candidates.sort(() => Math.random() - 0.5).slice(0, count);
+      for (const l of blocked) {
         // 15 puandan sonra bazen uzun bariyer (tren gibi)
         const long = s.score >= 15 && Math.random() < 0.3;
         g.obstacles.push({ lane: l, y: -60, passed: false, long });
       }
-      if (Math.random() < 0.5) g.coins.push({ lane: open, y: -140 });
+      g.lastBlocked = blocked;
+      // altın her zaman açık bir şeride gelsin
+      const openLanes = [0, 1, 2].filter(l => !blocked.includes(l));
+      if (Math.random() < 0.5) {
+        g.coins.push({ lane: openLanes[Math.floor(Math.random() * openLanes.length)], y: -140 });
+      }
     }
 
     const py = s.h * 0.8;
@@ -81,9 +88,16 @@ export const runner = {
   },
 
   drawBarrier(s, ctx, o) {
-    const p = this.persp(s, o.lane, o.y);
+    // uzun bariyer yol BOYUNCA uzanır (tren gibi): çarpışma menzili (±110)
+    // ile görsel uyum için ±70 aralıklı üç parça çizilir
+    const segs = o.long ? [-70, 0, 70] : [0];
+    for (const dy of segs) this.drawBarrierSeg(s, ctx, o.lane, o.y + dy);
+  },
+
+  drawBarrierSeg(s, ctx, lane, ly) {
+    const p = this.persp(s, lane, ly);
     const w = p.roadW * 0.24;
-    const h = (o.long ? 90 : 40) * p.scale;
+    const h = 44 * p.scale;
     const x = p.x - w / 2, y = p.y - h;
     // gövde
     const grad = ctx.createLinearGradient(x, y, x, y + h);

@@ -13,8 +13,11 @@ export const juggle = {
     };
   },
 
-  newBall(s, x) {
-    return { x, y: s.h * 0.35, vx: 0, vy: -150, r: 36, trail: [] };
+  newBall(s, x, fromTop = false) {
+    // fromTop: ekranın üstünden yavaşça süzülerek gelir (ani ölüm olmasın)
+    return fromTop
+      ? { x, y: -50, vx: 0, vy: 40, r: 36, trail: [], grace: true }
+      : { x, y: s.h * 0.35, vx: 0, vy: -150, r: 36, trail: [], grace: false };
   },
 
   tap(s, x, y) {
@@ -25,6 +28,7 @@ export const juggle = {
       if (d < bestD) { bestD = d; best = b; }
     }
     if (best && bestD <= best.r + 30) {
+      best.grace = false; // dokunulan top artık normal fizikte
       best.vy = -(520 + s.score * 6);
       best.vx = Math.max(-340, Math.min(340, (best.x - x) * 14));
       s.addScore();
@@ -36,16 +40,26 @@ export const juggle = {
     g.t += dt;
     if (!g.secondAdded && s.score >= 12) {
       g.secondAdded = true;
-      g.balls.push(this.newBall(s, s.w * 0.3));
+      g.balls.push(this.newBall(s, s.w * 0.3, true)); // ikinci top yukarıdan süzülür
     }
+    // adil başlangıç: ilk 0.8 sn yerçekimi yumuşak artar
+    const ramp = Math.min(1, g.t / 0.8);
+    const grav = g.gravity * (0.35 + 0.65 * ramp);
     for (const b of g.balls) {
-      b.vy += g.gravity * dt;
+      if (b.grace) {
+        // süzülme modu: düşük yerçekimi + hız sınırı, ekrana yumuşak giriş
+        b.vy = Math.min(b.vy + g.gravity * 0.25 * dt, 170);
+        if (b.y > s.h * 0.35) b.grace = false;
+      } else {
+        b.vy += grav * dt;
+      }
       b.x += b.vx * dt;
       b.y += b.vy * dt;
       b.vx *= 1 - 0.4 * dt;
       if (b.x - b.r < 0) { b.x = b.r; b.vx = Math.abs(b.vx) * 0.8; }
       if (b.x + b.r > s.w) { b.x = s.w - b.r; b.vx = -Math.abs(b.vx) * 0.8; }
-      if (b.y - b.r < 60) { b.y = 60 + b.r; b.vy = Math.abs(b.vy) * 0.6; }
+      // süzülen top üst sınırdan muaf (yukarıdan giriyor)
+      if (!b.grace && b.y - b.r < 60) { b.y = 60 + b.r; b.vy = Math.abs(b.vy) * 0.6; }
       if (b.vy > 0 && b.y + b.r >= s.h - 30) return s.end();
       b.trail.push([b.x, b.y]);
       if (b.trail.length > 9) b.trail.shift();

@@ -17,11 +17,22 @@ export const jump = {
     for (let y = s.h - 20; y > -60; y -= 85) this.addPlat(s, y);
   },
 
+  // zorluk eğrisi: 0 (başlangıç) → 1 (6000px yükseklikte tavan)
+  diff(g) { return Math.min(1, g.height / 6000); },
+
+  // yükseldikçe platform aralığı hafif açılır: 85 → 110px
+  // (zıplama yüksekliği ~190px, her zaman rahatça yetişilir)
+  gap(g) { return 85 + this.diff(g) * 25; },
+
   addPlat(s, y) {
     const g = s.G;
-    const moving = g.height > 800 && Math.random() < 0.35;
+    const d = this.diff(g);
+    // yükseldikçe hareketli platform oranı artar: %25 → %55
+    const moving = g.height > 800 && Math.random() < 0.25 + d * 0.3;
+    // yükseldikçe platformlar daralır: 74 → 58px
+    const w = Math.round(74 - d * 16);
     g.plats.push({
-      x: 40 + Math.random() * (s.w - 110), y, w: 74,
+      x: 20 + Math.random() * (s.w - 40 - w), y, w,
       moving, vx: moving ? (Math.random() < 0.5 ? -1 : 1) * (70 + Math.random() * 60) : 0,
     });
   },
@@ -63,7 +74,7 @@ export const jump = {
 
     g.plats = g.plats.filter(pl => pl.y < s.h + 40);
     let topY = Math.min(...g.plats.map(pl => pl.y));
-    while (topY > -40) { topY -= 85; this.addPlat(s, topY); }
+    while (topY > -40) { topY -= this.gap(g); this.addPlat(s, topY); }
 
     if (p.y > s.h + 30) return s.end();
   },

@@ -26,7 +26,10 @@ export const crossy = {
       def = { type: 'grass', bushes: [] };
     } else if (Math.random() < 0.55) {
       const dir = Math.random() < 0.5 ? 1 : -1;
-      const speed = (70 + Math.random() * 90 + Math.min(120, r * 2)) * dir;
+      // ilk yol satırları yavaş olsun (öğrenme eğrisi), sonra satırla hızlanır
+      const speed = (r < 6
+        ? 55 + Math.random() * 25
+        : 70 + Math.random() * 90 + Math.min(120, r * 2)) * dir;
       const cars = [];
       let x = Math.random() * 200;
       while (x < s.w + 300) {
@@ -50,6 +53,9 @@ export const crossy = {
     g.row++;
     g.hop = 0.15;
     if (g.row > s.score) s.setScore(g.row);
+    // geride kalan satırların önbelleğini sil — bellek sonsuz büyümesin
+    // (geri gitmek mümkün değil, bu satırlar bir daha görünmez)
+    for (const k in g.rows) if (+k < g.row - 8) delete g.rows[k];
   },
 
   gesture(s, dir) {
@@ -70,7 +76,6 @@ export const crossy = {
     g.camRow += (g.row - g.camRow) * Math.min(1, dt * 8);
 
     // görünür satırlardaki arabaları ilerlet + çarpışma
-    const rowH = 64;
     for (let r = g.row - 4; r <= g.row + 10; r++) {
       const def = this.rowDef(s, r);
       if (def.type !== 'road') continue;

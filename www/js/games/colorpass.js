@@ -52,7 +52,10 @@ export const colorpass = {
     g.rings = g.rings.filter(r => r.y < s.h + R + 40);
     const minY = Math.min(...g.rings.map(r => r.y));
     if (minY > s.h * 0.15) {
-      g.rings.push({ y: minY - s.h * 0.62, rot: Math.random() * Math.PI * 2, passed: false });
+      // halka aralığı en az 2R + pay: bir halka geçilip yeni renk atandığında
+      // top bir sonraki halkanın bandına asla değiyor olamaz (anında ölüm yok)
+      const gap = Math.max(s.h * 0.62, R * 2 + 120);
+      g.rings.push({ y: minY - gap, rot: Math.random() * Math.PI * 2, passed: false });
     }
     g.speed = 55 + s.score * 2.5;
   },

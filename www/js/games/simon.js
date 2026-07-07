@@ -24,6 +24,7 @@ export const simon = {
       lit: -1,
       timer: 0.8,
       pressTimer: 0,
+      goFlash: 0, // 'TEKRARLA' vurgusu: giriş fazına geçişte başlık parlar
     };
   },
 
@@ -69,6 +70,7 @@ export const simon = {
   update(s, dt) {
     const g = s.G;
     g.pressTimer = Math.max(0, g.pressTimer - dt);
+    g.goFlash = Math.max(0, g.goFlash - dt);
     if (g.pressTimer === 0 && g.phase !== 'show') g.lit = -1;
 
     if (g.phase === 'show') {
@@ -82,6 +84,7 @@ export const simon = {
           g.lit = -1;
           g.phase = 'input';
           g.inputIdx = 0;
+          g.goFlash = 0.7; // sıra sende! net görsel vurgu
         }
       }
       if (g.pressTimer === 0) g.lit = -1;
@@ -97,9 +100,18 @@ export const simon = {
     ctx.fillRect(0, 0, s.w, s.h);
 
     ctx.textAlign = 'center';
-    ctx.fillStyle = 'rgba(255,255,255,.85)';
-    ctx.font = '800 20px sans-serif';
-    ctx.fillText(g.phase === 'show' ? '👀 İZLE...' : '👆 SIRAYI TEKRARLA!', s.w / 2, s.h * 0.18);
+    if (g.phase === 'show') {
+      // gösterim: sarı başlık — dokunuşlar bu fazda sayılmaz
+      ctx.fillStyle = '#ffd23f';
+      ctx.font = '800 20px sans-serif';
+      ctx.fillText('👀 İZLE...', s.w / 2, s.h * 0.18);
+    } else {
+      // giriş fazına geçişte yeşil parlama + hafif büyüme: "sıra sende!"
+      const f = g.goFlash;
+      ctx.fillStyle = f > 0 ? '#2de2a3' : 'rgba(255,255,255,.85)';
+      ctx.font = `800 ${Math.round(20 + f * 8)}px sans-serif`;
+      ctx.fillText('👆 SIRAYI TEKRARLA!', s.w / 2, s.h * 0.18);
+    }
     ctx.font = '600 14px sans-serif';
     ctx.fillStyle = 'rgba(255,255,255,.5)';
     ctx.fillText(`Dizi uzunluğu: ${g.seq.length}`, s.w / 2, s.h * 0.215);

@@ -34,7 +34,7 @@ export const smash = {
       if (x >= r.x - 14 && x <= r.x + r.w + 14 && y >= r.y - 14 && y <= r.y + r.h + 14) {
         p.broken = true;
         s.addScore();
-        g.speed += 0.008;
+        g.speed = Math.min(0.5, g.speed + 0.008); // hız tavanı: oynanabilir kalsın
         for (let i = 0; i < 14; i++) {
           g.shards.push({
             x: r.x + Math.random() * r.w, y: r.y + Math.random() * r.h,
@@ -49,9 +49,11 @@ export const smash = {
 
   update(s, dt) {
     const g = s.G;
-    g.dist += g.speed * dt;
+    // öğrenme eğrisi: ilk 2 cam belirgin şekilde yavaş gelsin
+    const spd = g.speed * (s.score < 2 ? 0.65 : 1);
+    g.dist += spd * dt;
     for (const p of g.panes) {
-      p.z -= g.speed * dt;
+      p.z -= spd * dt;
       // 8 puandan sonra bazı camlar yanlara kayar
       if (p.osc) {
         p.phase += dt * 2.2;

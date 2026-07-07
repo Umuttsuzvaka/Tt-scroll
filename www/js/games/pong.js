@@ -22,6 +22,17 @@ export const pong = {
     s.G.px = Math.max(s.G.pw / 2, Math.min(s.w - s.G.pw / 2, x));
   },
 
+  // sekme sonrası açı düzeltmesi: dikey bileşen toplam hızın %35'inin altına inmesin
+  // (yoksa top sonsuza dek neredeyse yatay sekip durabilir); toplam hızı da sınırla
+  fixAngle(b, dirY) {
+    let sp = Math.hypot(b.vx, b.vy);
+    if (sp > 980) { b.vx *= 980 / sp; b.vy *= 980 / sp; sp = 980; }
+    if (Math.abs(b.vy) < sp * 0.35) {
+      b.vy = dirY * sp * 0.35;
+      b.vx = Math.sign(b.vx || 1) * Math.sqrt(sp * sp - b.vy * b.vy);
+    }
+  },
+
   serve(s, down) {
     const g = s.G;
     g.ball.x = s.w / 2;
@@ -51,17 +62,19 @@ export const pong = {
     const diff = b.x - g.ax;
     g.ax += Math.max(-aiSpeed * dt, Math.min(aiSpeed * dt, diff));
 
-    // oyuncu raketi
+    // oyuncu raketi — açı, çarpma noktasına göre değişir
     if (b.vy > 0 && b.y + b.r >= botY && b.y + b.r <= botY + 22 && Math.abs(b.x - g.px) <= g.pw / 2 + b.r) {
       b.vy = -Math.abs(b.vy) * 1.04;
       b.vx += (b.x - g.px) * 5;
       b.y = botY - b.r;
+      this.fixAngle(b, -1);
     }
     // yapay zekâ raketi
     if (b.vy < 0 && b.y - b.r <= topY && b.y - b.r >= topY - 22 && Math.abs(b.x - g.ax) <= g.pw / 2 + b.r) {
       b.vy = Math.abs(b.vy) * 1.04;
       b.vx += (b.x - g.ax) * 5;
       b.y = topY + b.r;
+      this.fixAngle(b, 1);
     }
 
     if (b.y < topY - 40) { s.addScore(); g.speed += 0.05; this.serve(s, true); }

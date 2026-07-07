@@ -11,17 +11,24 @@ export const colortap = {
   emoji: '🌈',
   howTo: 'Daire istenen renk olunca dokun! 8 puandan sonra dikkat: yazının RENGİ değil ANLAMI geçerli!',
 
+  // hedefle eşleşmeyen rastgele bir renk indeksi (bedava puanı engeller)
+  randOther(idx) {
+    return (idx + 1 + Math.floor(Math.random() * (COLORS.length - 1))) % COLORS.length;
+  },
+
   init(s) {
+    const targetIdx = Math.floor(Math.random() * COLORS.length);
     s.G = {
-      targetIdx: Math.floor(Math.random() * COLORS.length),
-      inkIdx: 0, // yazının mürekkep rengi (Stroop tuzağı)
-      current: 0,
+      targetIdx,
+      inkIdx: targetIdx, // yazının mürekkep rengi (Stroop tuzağı)
+      current: this.randOther(targetIdx), // başlangıçta asla hedefle eşleşmesin
       interval: 0.85,
       timer: 0,
       matchDeadline: 0,
+      stroopOn: false, // Stroop modu etkin mi
+      stroopWarn: 0,   // mod geçiş uyarısının kalan süresi
       t: 0,
     };
-    s.G.inkIdx = s.G.targetIdx;
   },
 
   newTarget(s) {
@@ -38,12 +45,13 @@ export const colortap = {
 
   tap(s) {
     const g = s.G;
+    if (g.stroopWarn > 0) return; // uyarı sırasında dokunuş cezalandırılmasın
     if (g.current === g.targetIdx) {
       s.addScore();
       g.interval = Math.max(0.35, g.interval * 0.95);
       this.newTarget(s);
       g.timer = 0;
-      g.current = Math.floor(Math.random() * COLORS.length);
+      g.current = this.randOther(g.targetIdx); // yeni tur da eşleşmeden başlasın
       g.matchDeadline = 0;
     } else {
       s.end();
@@ -53,6 +61,15 @@ export const colortap = {
   update(s, dt) {
     const g = s.G;
     g.t += dt;
+    // Stroop moduna geçiş: kısa bir uyarı göster, uyarı boyunca oyunu duraklat
+    if (!g.stroopOn && s.score >= 8) {
+      g.stroopOn = true;
+      g.stroopWarn = 1.4;
+    }
+    if (g.stroopWarn > 0) {
+      g.stroopWarn -= dt;
+      return; // oyuncu uyarıyı okusun, süre işlemesin
+    }
     g.timer += dt;
     if (g.matchDeadline > 0) {
       g.matchDeadline -= dt;
@@ -76,7 +93,7 @@ export const colortap = {
     ctx.textAlign = 'center';
     ctx.fillStyle = 'rgba(255,255,255,.8)';
     ctx.font = '700 16px sans-serif';
-    ctx.fillText(s.score >= 8 ? 'YAZININ ANLAMINA GÖRE!' : 'İSTENEN RENK', s.w / 2, s.h * 0.25);
+    ctx.fillText(g.stroopOn ? 'YAZININ ANLAMINA GÖRE!' : 'İSTENEN RENK', s.w / 2, s.h * 0.25);
 
     // hedef kelime — Stroop: mürekkep rengi yanıltabilir
     ctx.font = '900 46px sans-serif';
@@ -117,5 +134,17 @@ export const colortap = {
     ctx.beginPath();
     ctx.ellipse(cx - r * 0.32, cy - r * 0.42, r * 0.22, r * 0.12, -0.6, 0, Math.PI * 2);
     ctx.fill();
+
+    // Stroop moduna geçiş uyarısı: yanıp sönen banner
+    if (g.stroopWarn > 0) {
+      const blink = 0.55 + 0.45 * Math.abs(Math.sin(g.t * 9));
+      ctx.globalAlpha = blink;
+      ctx.fillStyle = '#ffd700';
+      ctx.font = '900 34px sans-serif';
+      ctx.fillText('DİKKAT!', s.w / 2, s.h * 0.42);
+      ctx.font = '800 17px sans-serif';
+      ctx.fillText('Artık yazının ANLAMI geçerli', s.w / 2, s.h * 0.46);
+      ctx.globalAlpha = 1;
+    }
   },
 };

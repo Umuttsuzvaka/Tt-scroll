@@ -29,11 +29,14 @@ export const flappy = {
     g.timer -= dt;
     if (g.timer <= 0) {
       g.timer = 1.6;
-      const gap = Math.max(150, 215 - s.score * 3);
+      // zorluk eğrisi: ilk borular geniş (ilk 5 puan ulaşılabilir), 20+ gerçekten dar
+      const gap = Math.max(140, 228 - s.score * 3.2);
       const cy = 100 + Math.random() * (s.h - 220 - gap) + gap / 2;
       g.pipes.push({
         x: s.w + 40, cy, baseCy: cy, gap, passed: false,
-        osc: s.score >= 5 && Math.random() < 0.45, // ileri seviyede dikey hareket
+        // dikey hareket 8 puandan sonra başlar, olasılığı ve genliği skorla artar
+        osc: s.score >= 8 && Math.random() < Math.min(0.6, 0.25 + (s.score - 8) * 0.025),
+        amp: 28 + Math.min(24, Math.max(0, s.score - 8) * 1.5),
         phase: Math.random() * Math.PI * 2,
       });
       if (Math.random() < 0.35) {
@@ -46,9 +49,9 @@ export const flappy = {
       p.x -= g.speed * dt;
       if (p.osc) {
         p.phase += dt * 1.6;
-        p.cy = p.baseCy + Math.sin(p.phase) * 42;
+        p.cy = p.baseCy + Math.sin(p.phase) * p.amp;
       }
-      if (!p.passed && p.x + 34 < bx) { p.passed = true; s.addScore(); g.speed += 4; }
+      if (!p.passed && p.x + 34 < bx) { p.passed = true; s.addScore(); g.speed = Math.min(300, g.speed + 4); }
       if (bx + r > p.x && bx - r < p.x + 68) {
         if (g.y - r < p.cy - p.gap / 2 || g.y + r > p.cy + p.gap / 2) return s.end();
       }

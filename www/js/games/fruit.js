@@ -79,7 +79,7 @@ export const fruit = {
     }
   },
 
-  launch(s, extraVx = 0) {
+  launch(s, extraVx = 0, bombChance = 0.16) {
     const g = s.G;
     const fromLeft = Math.random() < 0.5;
     g.items.push({
@@ -87,7 +87,7 @@ export const fruit = {
       y: s.h + 40,
       vx: (fromLeft ? 1 : -1) * (40 + Math.random() * 90) + extraVx,
       vy: -(s.h * 1.15 + Math.random() * s.h * 0.25),
-      bomb: Math.random() < 0.16,
+      bomb: Math.random() < bombChance,
       emoji: FRUITS[Math.floor(Math.random() * FRUITS.length)],
       spin: Math.random() * 4 - 2,
       rot: 0,
@@ -101,10 +101,10 @@ export const fruit = {
     if (g.spawnTimer <= 0) {
       g.spawnTimer = g.spawnEvery;
       g.spawnCount++;
-      // her 4. atış: 3-4 meyvelik yaylım!
+      // her 4. atış: 3-4 meyvelik yaylım! (yaylımda bomba oranı düşük — parmak gezdirmek adil kalsın)
       if (g.spawnCount % 4 === 0) {
         const n = 3 + Math.floor(Math.random() * 2);
-        for (let k = 0; k < n; k++) this.launch(s, (k - n / 2) * 40);
+        for (let k = 0; k < n; k++) this.launch(s, (k - n / 2) * 40, 0.08);
         g.spawnTimer = g.spawnEvery * 1.6;
       } else {
         this.launch(s);

@@ -14,7 +14,8 @@ export const snake = {
       cols, rows, cell,
       oy: s.h * 0.14,
       body: [[7, Math.floor(rows / 2)], [6, Math.floor(rows / 2)], [5, Math.floor(rows / 2)]],
-      dir: [1, 0], nextDir: [1, 0],
+      dir: [1, 0],
+      dirQueue: [], // hızlı art arda jestler kaybolmasın diye 2 elemanlı yön kuyruğu
       food: null,
       stepTimer: 0,
       t: 0,
@@ -35,9 +36,12 @@ export const snake = {
     const g = s.G;
     const map = { left: [-1, 0], right: [1, 0], up: [0, -1], down: [0, 1] };
     const nd = map[dir];
-    // geri dönüş yasak
-    if (nd[0] === -g.dir[0] && nd[1] === -g.dir[1]) return;
-    g.nextDir = nd;
+    if (g.dirQueue.length >= 2) return; // kuyruk dolu
+    // geri dönüş yasak — kuyruktaki son yöne (yoksa mevcut yöne) göre kontrol
+    const ref = g.dirQueue.length ? g.dirQueue[g.dirQueue.length - 1] : g.dir;
+    if (nd[0] === -ref[0] && nd[1] === -ref[1]) return;
+    if (nd[0] === ref[0] && nd[1] === ref[1]) return; // aynı yön: kuyruğu boşuna doldurma
+    g.dirQueue.push(nd);
   },
 
   update(s, dt) {
@@ -48,7 +52,7 @@ export const snake = {
     if (g.stepTimer < step) return;
     g.stepTimer = 0;
 
-    g.dir = g.nextDir;
+    if (g.dirQueue.length) g.dir = g.dirQueue.shift();
     const head = [g.body[0][0] + g.dir[0], g.body[0][1] + g.dir[1]];
     if (head[0] < 0 || head[0] >= g.cols || head[1] < 0 || head[1] >= g.rows) return s.end();
     if (g.body.some(([x, y]) => x === head[0] && y === head[1])) return s.end();

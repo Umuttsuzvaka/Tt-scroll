@@ -41,12 +41,31 @@ export const basket = {
       b.x += b.vx * dt;
       b.y += b.vy * dt;
       const h = this.hoop(s);
+      // rim uçlarına basit çarpışma: top çember kenarına gelince gerçekçi biçimde seker
+      for (const ex of [h.x - h.w / 2, h.x + h.w / 2]) {
+        const dx = b.x - ex, dy = b.y - h.y;
+        const d = Math.hypot(dx, dy);
+        const rr = 21; // top yarıçapı (18) + rim kalınlığı payı
+        if (d > 0.001 && d < rr) {
+          const nx = dx / d, ny = dy / d;
+          const dot = b.vx * nx + b.vy * ny;
+          if (dot < 0) {
+            // hızı normale göre yansıt (sönümlü) — top rim ucundan seker
+            b.vx -= 1.5 * dot * nx;
+            b.vy -= 1.5 * dot * ny;
+          }
+          // topu rimin dışına it (iç içe sıkışma olmasın)
+          b.x = ex + nx * rr;
+          b.y = h.y + ny * rr;
+        }
+      }
       // sayı: çember hizasından aşağı yönlü geçiş
       if (!b.scored && b.vy > 0 && b.y > h.y - 6 && b.y < h.y + 18 && Math.abs(b.x - h.x) < h.w / 2 - 10) {
         b.scored = true;
         s.addScore();
         g.swish = 0.5;
-        g.hoopX = s.w * 0.25 + Math.random() * s.w * 0.5; // pota yer değiştirir
+        // pota hemen ışınlanmasın: top sahadan çıkınca yeni yerine geçer
+        g.nextHoopX = s.w * 0.25 + Math.random() * s.w * 0.5;
       }
       if (b.y > s.h + 40 || b.x < -40 || b.x > s.w + 40) {
         if (!b.scored) {
@@ -54,6 +73,10 @@ export const basket = {
           if (g.missed >= 3) return s.end();
         }
         g.ball = null;
+        if (g.nextHoopX != null) {
+          g.hoopX = g.nextHoopX;
+          g.nextHoopX = null;
+        }
       }
     }
   },
@@ -91,14 +114,24 @@ export const basket = {
     ctx.moveTo(h.x - h.w / 2, h.y);
     ctx.lineTo(h.x + h.w / 2, h.y);
     ctx.stroke();
-    // file
+    // file: üstte çember genişliğinde, altta simetrik daralan ağ
     ctx.strokeStyle = 'rgba(255,255,255,.65)';
     ctx.lineWidth = 1.5;
     for (let i = 0; i <= 6; i++) {
-      const nx = h.x - h.w / 2 + (h.w / 6) * i;
+      const topX = h.x - h.w / 2 + (h.w / 6) * i;
+      const botX = h.x - h.w / 4 + (h.w / 2 / 6) * i;
       ctx.beginPath();
-      ctx.moveTo(nx, h.y);
-      ctx.lineTo(h.x - h.w / 4 + (h.w / 12) * i * 1.0 + h.w / 8, h.y + 38);
+      ctx.moveTo(topX, h.y);
+      ctx.lineTo(botX, h.y + 38);
+      ctx.stroke();
+    }
+    // çapraz ağ çizgileri (gerçek file görünümü)
+    for (let i = 0; i <= 6; i++) {
+      const topX = h.x + h.w / 2 - (h.w / 6) * i;
+      const botX = h.x + h.w / 4 - (h.w / 2 / 6) * i;
+      ctx.beginPath();
+      ctx.moveTo(topX, h.y);
+      ctx.lineTo(botX, h.y + 38);
       ctx.stroke();
     }
     if (g.swish > 0) {

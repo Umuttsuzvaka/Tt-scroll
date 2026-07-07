@@ -13,17 +13,25 @@ export const lumber = {
       chop: 0,     // balta sallama animasyonu
     };
     for (let i = 0; i < 8; i++) {
-      s.G.segs.push({ branch: i < 3 ? 'none' : this.randBranch(s.G.segs[i - 1]) });
+      s.G.segs.push({ branch: i < 3 ? 'none' : this.randBranch(s.G.segs) });
     }
   },
 
-  randBranch(prev) {
-    // art arda aynı taraf gelmesin diye hafif denge
+  randBranch(segs) {
+    // ÖNEMLİ ADALET KURALI: bir dalın hemen üstüne KARŞI taraf dal gelemez —
+    // yoksa hangi tarafa dokunursan dokun ölürsün (imkânsız dizi).
+    const prev = segs[segs.length - 1];
+    if (prev && prev.branch !== 'none') {
+      // dal üstüne: ya boşluk ya da aynı taraf (aynı taraf güvenlidir)
+      return Math.random() < 0.6 ? 'none' : prev.branch;
+    }
+    // art arda 3+ dalsız segment gelmesin — oyun boş kalmasın
+    let nones = 0;
+    for (let i = segs.length - 1; i >= 0 && segs[i].branch === 'none'; i--) nones++;
+    if (nones >= 3) return Math.random() < 0.5 ? 'left' : 'right';
     const r = Math.random();
-    if (r < 0.35) return 'none';
-    if (prev && prev.branch === 'left') return r < 0.75 ? 'right' : 'none';
-    if (prev && prev.branch === 'right') return r < 0.75 ? 'left' : 'none';
-    return r < 0.68 ? 'left' : 'right';
+    if (r < 0.3) return 'none';
+    return r < 0.65 ? 'left' : 'right';
   },
 
   tap(s, x) {
@@ -33,12 +41,13 @@ export const lumber = {
     if (g.segs[0].branch === g.side) return s.end();
     // kes!
     g.segs.shift();
-    g.segs.push({ branch: this.randBranch(g.segs[g.segs.length - 1]) });
+    g.segs.push({ branch: this.randBranch(g.segs) });
     // yeni inen dal üstüne düşerse ölürsün
     if (g.segs[0].branch === g.side) { s.addScore(); return s.end(); }
     s.addScore();
     g.time = Math.min(g.maxTime, g.time + 0.32);
-    g.maxTime = Math.max(3, 5 - s.score * 0.02);
+    // süre tavanı yavaşça 5 → 3 sn'ye iner (skor 133'te tabana ulaşır)
+    g.maxTime = Math.max(3, 5 - s.score * 0.015);
     g.chop = 0.15;
   },
 

@@ -18,6 +18,7 @@ export const piano = {
       ripples: [],
       song: randomMelody(),
       noteIdx: 0,
+      missFlash: 0, // kaçan karonun kırmızı yanma süresi
     };
     // ekranı baştan karolarla doldur
     for (let y = -s.G.tileH; y > -s.h; y -= s.G.tileH) this.spawn(s, y);
@@ -36,15 +37,17 @@ export const piano = {
 
   tap(s, x, y) {
     const g = s.G;
-    const lane = Math.floor(x / (s.w / g.lanes));
-    // o şeritteki en alttaki vurulmamış görünür karo
+    if (g.missFlash > 0) return; // kaçırma animasyonu sırasında dokunuş yok
+    const lane = Math.min(g.lanes - 1, Math.max(0, Math.floor(x / (s.w / g.lanes))));
+    // o şeritteki en alttaki vurulmamış görünür karo (çift karoda her şerit ayrı hedef)
     let target = null;
     for (const t of g.tiles) {
       if (t.lane === lane && !t.hit && t.y + g.tileH > 0) {
         if (!target || t.y > target.y) target = t;
       }
     }
-    if (target && target.y + g.tileH > y - 40 && target.y < y + g.tileH) {
+    // tolerans: karonun 40px altına ve yarım karo üstüne kadar geçerli
+    if (target && y > target.y - g.tileH * 0.5 && y < target.y + g.tileH + 40) {
       target.hit = true;
       // şarkının sıradaki notasını çal 🎵
       sound.pianoNote(g.song.notes[g.noteIdx]);
@@ -59,10 +62,21 @@ export const piano = {
 
   update(s, dt) {
     const g = s.G;
+    // kaçan karo geri bildirimi: sahne donar, karo kırmızı yanar, sonra oyun biter
+    if (g.missFlash > 0) {
+      g.missFlash -= dt;
+      if (g.missFlash <= 0) s.end();
+      return;
+    }
     let topY = Infinity;
     for (const t of g.tiles) {
       t.y += g.speed * dt;
-      if (!t.hit && t.y > s.h) return s.end(); // karo kaçtı
+      if (!t.hit && t.y > s.h) { // karo kaçtı
+        t.missed = true;
+        t.y = s.h - g.tileH; // yanma animasyonu görünür kalsın
+        g.missFlash = 0.6;
+        return;
+      }
       topY = Math.min(topY, t.y);
     }
     g.tiles = g.tiles.filter(t => t.y < s.h + g.tileH);
@@ -98,6 +112,15 @@ export const piano = {
       if (t.hit) {
         ctx.fillStyle = 'rgba(45,226,163,.35)';
         ctx.fillRect(t.lane * laneW + 2, t.y, laneW - 4, g.tileH - 4);
+        continue;
+      }
+      if (t.missed) {
+        // kaçan karo: kırmızı yanıp söner
+        const blink = 0.45 + 0.45 * Math.abs(Math.sin(g.missFlash * 22));
+        ctx.fillStyle = `rgba(254,44,85,${blink})`;
+        ctx.beginPath();
+        ctx.roundRect(t.lane * laneW + 2, t.y, laneW - 4, g.tileH - 4, 6);
+        ctx.fill();
         continue;
       }
       const tile = ctx.createLinearGradient(0, t.y, 0, t.y + g.tileH);

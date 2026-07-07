@@ -12,6 +12,7 @@ export const knife = {
       baseSpeed: 1.6,
       knives: [],   // kütüğe saplı bıçakların yerel açıları
       flying: null, // { y } fırlatılan bıçak
+      shake: 0,     // saplanma sarsıntısı (recoil) zamanlayıcısı
       t: 0,
     };
   },
@@ -27,6 +28,7 @@ export const knife = {
   update(s, dt) {
     const g = s.G;
     g.t += dt;
+    g.shake = Math.max(0, g.shake - dt);
     // hız deseni: skorla artar + dalgalanır, ara sıra yön değişir
     const speed = (g.baseSpeed + s.score * 0.06) * (1 + Math.sin(g.t * 1.3) * 0.35);
     g.rot += speed * g.dir * dt;
@@ -37,14 +39,18 @@ export const knife = {
       if (g.flying.y <= c.y + c.r) {
         // temas: alttan giren bıçağın kütükteki yerel açısı
         const local = ((Math.PI / 2 - g.rot) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+        // çakışma eşiği: bıçak namlusu ~10px genişliğinde — kütük yarıçapında
+        // kapladığı gerçek açı + küçük pay; böylece görsel ile his örtüşür
+        const thresh = Math.max(0.12, 15 / c.r);
         const clash = g.knives.some(a => {
           let d = Math.abs(a - local) % (Math.PI * 2);
           if (d > Math.PI) d = Math.PI * 2 - d;
-          return d < 0.3;
+          return d < thresh;
         });
         g.flying = null;
         if (clash) return s.end();
         g.knives.push(local);
+        g.shake = 0.18; // kütük saplanma anında hafifçe sarsılır
         s.addScore();
         if (s.score % 8 === 0) {
           g.knives = [];            // yeni kütük!
@@ -89,6 +95,8 @@ export const knife = {
     ctx.fillRect(0, 0, s.w, s.h);
 
     const c = this.center(s);
+    // saplanma sarsıntısı: kütük ve bıçaklar birlikte hafifçe titrer
+    c.y += g.shake > 0 ? Math.sin(g.shake * 55) * g.shake * 38 : 0;
 
     // saplı bıçaklar (kütükle döner) — kütükten dışarı sarkar
     for (const a of g.knives) {

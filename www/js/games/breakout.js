@@ -45,12 +45,19 @@ export const breakout = {
     if (b.x + b.r > s.w) { b.x = s.w - b.r; b.vx = -Math.abs(b.vx); }
     if (b.y - b.r < 0) { b.y = b.r; b.vy = Math.abs(b.vy); }
 
-    // raket
+    // raket — açı, topun rakete çarptığı noktaya göre değişir
     const py = s.h * 0.88;
     if (b.vy > 0 && b.y + b.r >= py && b.y + b.r <= py + 24 && Math.abs(b.x - g.px) <= g.pw / 2 + b.r) {
       b.vy = -Math.abs(b.vy);
       b.vx += (b.x - g.px) * 4.5;
       b.y = py - b.r;
+      // toplam hızı sınırla + dikey bileşen eşiği: sonsuz yatay sekmeyi engelle
+      let sp = Math.hypot(b.vx, b.vy);
+      if (sp > 900) { b.vx *= 900 / sp; b.vy *= 900 / sp; sp = 900; }
+      if (Math.abs(b.vy) < sp * 0.35) {
+        b.vy = -sp * 0.35;
+        b.vx = Math.sign(b.vx || 1) * Math.sqrt(sp * sp - b.vy * b.vy);
+      }
     }
 
     // tuğlalar
